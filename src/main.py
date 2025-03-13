@@ -1,4 +1,5 @@
 import os
+import sys
 import shutil
 from textnode import TextType, TextNode
 from page_generator import generate_page
@@ -42,7 +43,7 @@ def copy_static(path_from, path_to):
             copy_static(entry_path_from, entry_path_to)
 
 
-def generate_page_from_md_files(source_dir, destination_dir):
+def generate_page_recursive(source_dir, destination_dir, basepath):
     template_path = os.path.expanduser("~/sitegenerator/template.html")
 
     for entry in os.listdir(source_dir):
@@ -50,34 +51,27 @@ def generate_page_from_md_files(source_dir, destination_dir):
         
         if os.path.isfile(source_path) and source_path.endswith(".md"):
             # Create the corresponding path in the destination directory
-            relative_path = os.path.relpath(source_path, source_dir)  # Get relative path from source
             destination_path = os.path.join(destination_dir, "index.html")
             
-            generate_page(source_path, template_path, destination_path)
+            generate_page(source_path, template_path, destination_path, basepath)
 
 
         elif os.path.isdir(source_path):  # Recurse into subdirectories
-            generate_page_from_md_files(source_path, os.path.join(destination_dir, entry))
+            generate_page_recursive(source_path, os.path.join(destination_dir, entry), basepath)
 
 
     
 def main():
+    basepath = sys.argv[1] if len(sys.argv) > 1 else "/"
     source_path = os.path.expanduser("~/sitegenerator/static")
-    destination_path = os.path.expanduser("~/sitegenerator/public")
+    destination_path = os.path.expanduser("~/sitegenerator/docs")
 
-    clear_destination(destination_path)
+#   clear_destination(destination_path)
     copy_static(source_path, destination_path)
 
-    '''
-    content_index_path = os.path.expanduser("~/sitegenerator/content/index.md")
-    template_path = os.path.expanduser("~/sitegenerator/template.html")
-    index_path = os.path.expanduser("~/sitegenerator/public/index.html")
-    generate_page(content_index_path, template_path, index_path)
-    '''
-
     content_index_path = os.path.expanduser("~/sitegenerator/content")
-    destination_index_path = os.path.expanduser("~/sitegenerator/public")
-    generate_page_from_md_files(content_index_path, destination_index_path)
+    destination_index_path = os.path.expanduser("~/sitegenerator/docs")
+    generate_page_recursive(content_index_path, destination_index_path, basepath)
 
 if __name__ == "__main__":
     main()
